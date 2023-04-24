@@ -1,4 +1,4 @@
-from flask import Flask, render_template,request
+from flask import Flask, render_template, request
 import pymysql
 
 app = Flask(__name__)
@@ -20,16 +20,11 @@ def show():
     cur.execute(sql)
     content = cur.fetchall()
 
-    sql = "SHOW FIELDS FROM student"
-    cur.execute(sql)
-    labels = cur.fetchall()
-    labels = [l[0] for l in labels]
+    return render_template('show.html', content=content)
 
-    return render_template('show.html', labels=labels, content=content)
 
 @app.route('/showinsert')
 def showinsert():
-
     return render_template('insert.html')
 
 
@@ -41,14 +36,15 @@ def insert():
 
     cur = conn.cursor()
     sql = "INSERT INTO student (id,name,birth) VALUES (%s, %s, %s)"
-    val = (id,name,birth)
+    val = (id, name, birth)
     try:
-        cur.execute(sql,val)
+        cur.execute(sql, val)
         conn.commit()
         return render_template('alert.html')
-    except :
+    except:
         conn.rollback()
         return render_template('error.html')
+
 
 @app.route('/showdelete')
 def showdelete():
@@ -66,6 +62,7 @@ def showdelete():
 
     return render_template('delete.html', labels=labels, content=content)
 
+
 @app.route('/subdelete')
 def delete():
     id = request.args.get("id")
@@ -76,9 +73,11 @@ def delete():
         cur.execute(sql)
         conn.commit()
         return render_template('alert.html')
-    except :
+    except:
         conn.rollback()
         return render_template('error.html')
+
+
 @app.route('/showupdate')
 def showupdate():
     id = request.args.get("id")
@@ -88,7 +87,8 @@ def showupdate():
     cur.execute(sql)
     content = cur.fetchall()
 
-    return render_template('update.html',content=content)
+    return render_template('update.html', content=content)
+
 
 @app.route('/subupdate', methods=['POST'])
 def update():
@@ -98,19 +98,36 @@ def update():
     birth = request.form['birth']
     cur = conn.cursor()
 
-    sql = "update student set id='%s',name='%s' ,birth='%s' where id='%s'" % (id2,name,birth,id)
+    sql = "update student set id='%s',name='%s' ,birth='%s' where id='%s'" % (id2, name, birth, id)
     try:
         cur.execute(sql)
         conn.commit()
         return render_template('alert.html')
-    except :
+    except:
         conn.rollback()
         return render_template('error.html')
 
 
-
+@app.route('/showsearch')
+def subsearch():
+    id = request.args.get("id")
+    cur = conn.cursor()
+    sql = "SHOW FIELDS FROM student"
+    cur.execute(sql)
+    labels = cur.fetchall()
+    labels = [l[0] for l in labels]
+    sql1 = "select * from student where id=" + str(id)
+    try:
+      cur.execute(sql1)
+      content = cur.fetchall()
+      if len(content) == 0:
+         return ("here")
+      else:
+         return render_template('search.html', labels=labels, content=content)
+    except:
+      conn.rollback()
+      return render_template('error.html')
 
 if __name__ == '__main__':
     app.run()
-
 
